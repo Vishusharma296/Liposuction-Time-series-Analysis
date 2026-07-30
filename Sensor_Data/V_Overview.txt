@@ -1,0 +1,14 @@
+Overview of the last liposuction test and the csv-datasets
+
+- Liposuction tests with real human tissue
+- 17 csv-datasets
+  -- 2 operators (Erik and Eric)
+  -- with vacuum assistence or without
+  -- with water assistence or without
+  -- with vaccum + water or without both
+  -- V7 is a special dataset, were we performed different speeds
+     --> 0-10s nothing
+     --> 10-30s normal speed
+     --> 30-50s very slow speed
+     --> 50-70s very fast speed
+     --> 70-80s nothing
