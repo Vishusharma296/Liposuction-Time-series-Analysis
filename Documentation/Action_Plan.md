@@ -7,15 +7,17 @@ Train machine learning models to determine which artificial phantoms most closel
 
 ## Understanding Your Data Structure
 
-### Current Data Assets
+### Current Data Assets (Updated)
 
 **Real Human Tissue Samples:**
-- Adipose_1 through Adipose_4 (4 samples)
+- Adipose_1 through Adipose_5 (5 samples)
 - Multiple test runs per sample with varying conditions
+- Adipose_3 has dual sampling rates (100 Hz and 10 Hz variants)
 
 **Artificial Phantom Samples:**
 - Phantom_1, Phantom_2, Phantom_3 (3 samples)
 - Each has multiple test runs under different conditions
+- Consistently sampled at 100 Hz
 
 **Test Conditions:**
 - Vacuum: ON/OFF
@@ -23,31 +25,51 @@ Train machine learning models to determine which artificial phantoms most closel
 - Insertion speeds: slow, normal, fast (varies by tissue type)
 
 **Sampling Rates:**
-- 100 Hz: Adipose_1, Adipose_2, Phantom_1-3
-- 10 Hz: Adipose_3, Adipose_4, additional Adipose_3 variants
+- 100 Hz: Adipose_1, Adipose_2, Phantom_1-3, Adipose_3 (selected runs)
+- 10 Hz: Adipose_3, Adipose_4, Adipose_5 (primary sampling)
 
 **Data Format:**
 - Primarily `.sum` files (binary sensor dumps)
-- Metadata.md catalogs all recordings
+- Some `.csv` files for processed data
+- **Metadata.md** catalogs all recordings with tissue type, sampling frequency, file names, and test condition descriptions
+
+### Metadata.md Summary
+
+The repository now includes comprehensive metadata tracking:
+
+| Tissue Type | Count | Sampling Frequency | Key Characteristics |
+|-------------|-------|-------------------|-------------------|
+| **Phantom_1** | 5 recordings | 100 Hz | Baseline phantom; tested with vacuum/water variations |
+| **Phantom_2** | 5 recordings | 100 Hz | Second phantom formulation; tested with vacuum/water variations |
+| **Phantom_3** | 5 recordings | 100 Hz | Third phantom formulation; tested with vacuum/water variations |
+| **Adipose_1** | 2 recordings | 100 Hz | Insertion speed variations (normal, slow, fast); vacuum ON + water ON |
+| **Adipose_2** | 2 recordings | 100 Hz | Insertion speed variations (normal, slow, fast); vacuum ON + water ON |
+| **Adipose_3** | 6 recordings | 10 Hz + 100 Hz | Real tissue; multiple trials under consistent conditions |
+| **Adipose_4** | 2 recordings | 10 Hz | Real tissue; duplicate file naming suggests data quality check |
+| **Adipose_5** | 4 recordings | 10 Hz | Real tissue; comprehensive condition testing (vacuum/water variations) |
+
+**Total Dataset:** 32 recordings across 8 tissue samples
 
 ### Critical Questions to Answer
 
-1. **Data Format & Availability**
-   - Are all `.sum` files stored in the repository?
-   - What tool/library is needed to parse `.sum` format?
-   - Does each file contain only force data, or also position, velocity, or other sensor readings?
+1. **Data Format & Availability** ✓ *Updated*
+   - All `.sum` files are documented in Metadata.md
+   - Metadata provides sampling frequency and condition descriptions for each file
+   - **Action:** Confirm binary format specifications and parsing requirements
 
 2. **Ground Truth Definition**
-   - Which real tissue conditions represent "the standard" for comparison?
-   - Should we use all adipose samples equally, or prioritize certain tissue sources?
+   - Adipose_3 and Adipose_5 have comprehensive condition coverage
+   - Adipose_1, Adipose_2 focus on insertion speed variations
+   - **Decision Needed:** Should ground truth weight all real tissue equally or prioritize high-frequency samples?
 
 3. **Phantom Formulation Data**
    - Are the exact gelatin/chitosan/glycerol ratios known for Phantom_1, Phantom_2, Phantom_3?
    - Is this data available in the repository, or needs to be added?
 
-4. **Data Quality**
-   - Are baseline measurements available (e.g., needle insertion without liposuction action)?
-   - How much variation exists within each tissue sample? (affects signal-to-noise ratio)
+4. **Data Quality** ✓ *Partially Updated*
+   - Adipose_4 has duplicate filenames suggesting redundancy or validation runs
+   - Metadata shows consistent test conditions for each tissue type
+   - **Action:** Verify all files are complete and uncorrupted
 
 ---
 
@@ -62,13 +84,15 @@ Train machine learning models to determine which artificial phantoms most closel
 - Compare signal characteristics under different conditions (vacuum, water, speed)
 - Investigate whether the bench-stabilized vs. freehand distinction (Objective 1 in thesis) is visible in raw data
 - Document qualitative observations: noise patterns, peak magnitudes, recovery behavior
+- Leverage Adipose_3 and Adipose_5's multi-condition coverage for robust comparison
 
 **Why This Matters:**
 - Visual patterns inform feature engineering strategy
 - If raw signals are indistinguishable, ML models won't perform well
 - Identifies which conditions most clearly reveal tissue differences
+- Multi-frequency sampling (100 Hz vs. 10 Hz) may reveal different signal characteristics
 
-**Deliverable:** Visualization report with comparative signal plots
+**Deliverable:** Visualization report with comparative signal plots and frequency analysis
 
 ---
 
@@ -98,18 +122,20 @@ Train machine learning models to determine which artificial phantoms most closel
 - Peak frequency location
 - Frequency distribution shape (multiple peaks vs. smooth rolloff)
 - High-frequency noise vs. low-frequency trends
+- **Note:** Consider aliasing effects when comparing 10 Hz vs. 100 Hz data
 
 **Physiological Rationale:**
 - Real adipose tissue has complex fiber networks → expect irregular force patterns
 - Synthetic phantoms are more uniform → expect smoother, more predictable signals
 - Frequency content may differ due to material composition differences
+- Multiple sampling rates provide multi-scale temporal information
 
 **Planning Decisions:**
 - Which features have strongest biological justification?
-- How many features can we extract without overfitting? (curse of dimensionality)
+- How to normalize features across different sampling rates (10 Hz vs. 100 Hz)?
 - Should we use domain expertise to select features, or use automated feature importance methods?
 
-**Deliverable:** Feature extraction pipeline and justification document
+**Deliverable:** Feature extraction pipeline with sampling-rate normalization and justification document
 
 ---
 
@@ -160,6 +186,7 @@ Train machine learning models to determine which artificial phantoms most closel
 - **Method:** Compare each phantom tested under "Condition X" only to real tissue tested under "Condition X"
 - **Pros:** Fair comparison; isolates material properties from equipment effects
 - **Cons:** Requires sufficient data per condition; sparse conditions reduce statistical power
+- **Note:** Adipose_3 and Adipose_5 have comprehensive condition coverage enabling this approach
 
 #### Strategy 3: Hierarchical Scoring
 - **Method:** Compute per-condition mimicry score, then average across all conditions
@@ -167,11 +194,11 @@ Train machine learning models to determine which artificial phantoms most closel
 - **Cons:** More complex implementation; needs appropriate weighting scheme
 
 **Planning Decisions:**
-- How much data exists per phantom per condition?
+- How much data exists per phantom per condition? (see Metadata.md)
 - Are certain conditions (e.g., Vacuum ON + Water ON) more clinically relevant?
 - Should we weight conditions by realism or equal importance?
 
-**Recommended Approach:** Start with Strategy 1 (average across conditions), then validate with Strategy 2 if data permits
+**Recommended Approach:** Start with Strategy 3 (hierarchical scoring) leveraging Adipose_3 and Adipose_5's multi-condition data, then validate with Strategy 2 for specific high-value conditions
 
 ---
 
@@ -241,7 +268,8 @@ Train machine learning models to determine which artificial phantoms most closel
 1. Compute all candidates for all samples
 2. Rank by correlation with tissue type (real vs. phantom)
 3. Remove highly correlated pairs (keep only most interpretable)
-4. Final set: 8–12 features balancing predictiveness and interpretability
+4. Validate feature stability across different sampling rates
+5. Final set: 8–12 features balancing predictiveness and interpretability
 
 ---
 
@@ -255,11 +283,13 @@ Train machine learning models to determine which artificial phantoms most closel
    - **Why:** Excellent feature importance analysis; handles non-linear relationships; robust to small datasets
    - **Output:** Classification probabilities → convert to fidelity score
    - **Pros:** Fast training; interpretable; works well with hand-crafted features
+   - **Cons:** May struggle with mixed sampling rates if not properly normalized
 
 2. **Random Forest**
    - **Why:** Inherently produces confidence scores; resistant to overfitting
    - **Output:** Probability of "real tissue" → use as fidelity metric
    - **Pros:** Stable; handles feature interactions; good baseline
+   - **Cons:** Less powerful than XGBoost for complex patterns
 
 3. **Support Vector Machine (SVM)**
    - **Why:** Works well in high-dimensional feature spaces; robust margins
@@ -270,8 +300,8 @@ Train machine learning models to determine which artificial phantoms most closel
 4. **Deep Learning (LSTM or 1D-CNN)**
    - **Why:** Learns features directly from raw time-series
    - **Output:** Network activation → fidelity score
-   - **Pros:** Potential for better feature discovery
-   - **Cons:** Requires more training data; harder to interpret
+   - **Pros:** Potential for better feature discovery; handles variable-length sequences
+   - **Cons:** Requires more training data; harder to interpret; needs careful handling of mixed sampling rates
 
 **Recommended:** Start with XGBoost or Random Forest (well-understood, fast, interpretable). If data grows, revisit deep learning.
 
@@ -298,29 +328,34 @@ Train machine learning models to determine which artificial phantoms most closel
 
 ### Before Feature Extraction:
 
-1. **File Parsing**
+1. **File Parsing** ✓ *Updated*
    - Load `.sum` files; determine exact data structure
    - Identify which columns are force, time, position, etc.
+   - Handle dual sampling rates (10 Hz and 100 Hz)
 
-2. **Temporal Alignment**
+2. **Temporal Alignment** ✓ *Updated*
    - Identify recording start/end (when is needle inserted? When removed?)
    - Segment by activity phase (insertion, steady-state liposuction, extraction)
-   - Optional: resample 10 Hz and 100 Hz data to common rate (e.g., 50 Hz)
+   - Resample heterogeneous data: convert 100 Hz and 10 Hz to common rate (e.g., 50 Hz)
+   - **Critical for comparison:** Ensure all signals are aligned to same temporal grid
 
 3. **Normalization**
    - Handle absolute force scaling (different cannula diameters? Sensor calibration?)
    - Normalize by time duration (length-dependent metrics)
    - Standardize force units (kPa? Newtons? Normalized pressure?)
+   - **Sampling-rate adjustment:** Scale derivative-based features by sampling frequency
 
 4. **Outlier Handling**
    - Detect and flag anomalous recordings (equipment malfunction? Incomplete data?)
+   - Cross-check Adipose_4 duplicates for data quality
    - Decide: remove, clip, or keep with warning flag?
 
 5. **Missing Data**
    - Any gaps in time-series? Interpolation strategy?
    - Any incomplete files (truncated recordings)?
+   - Handle edge cases from mixed sampling rates
 
-**Deliverable:** Data preprocessing pipeline with validation checks
+**Deliverable:** Data preprocessing pipeline with validation checks and sampling-rate harmonization
 
 ---
 
@@ -343,13 +378,15 @@ Train machine learning models to determine which artificial phantoms most closel
 **Cross-Validation:**
 - Leave-one-sample-out (if data is small): test on Phantom_1, train on Adipose + Phantom_2 + Phantom_3
 - k-fold cross-validation (if data permits): 5–10 folds
+- Stratified by tissue type and sampling rate (ensure balanced train/test splits)
 
 **Hold-Out Test Set:**
 - Reserve 20–30% of data for final evaluation
-- Stratified by tissue type (ensure real and phantom both in train/test)
+- Stratified by tissue type, sampling rate, and condition
 
 **Ablation Studies:**
 - Remove one feature at a time; does performance drop?
+- Test robustness to sampling rate differences
 - This identifies which features actually matter vs. noise
 
 ### Metrics for Optimization (Phase 5)
@@ -364,24 +401,29 @@ Train machine learning models to determine which artificial phantoms most closel
 ## Implementation Roadmap
 
 ### Stage 1: Exploration & Validation (Weeks 1–2)
-- [ ] Clarify data format; confirm all `.sum` files are accessible
-- [ ] Load and visualize raw force traces (real vs. phantom)
+- [ ] Confirm all `.sum` files referenced in Metadata.md are accessible
+- [ ] Understand binary format and parse files successfully
+- [ ] Load and visualize raw force traces (real vs. phantom, by sampling rate)
 - [ ] Document signal characteristics and qualitative differences
-- [ ] Acquire missing information (formulation ratios, sampling details)
+- [ ] Identify and handle mixed sampling rate data (100 Hz vs. 10 Hz)
+- [ ] Acquire missing information (formulation ratios, exact sampling specifications)
+- [ ] Verify data quality (especially Adipose_4 duplicates)
 
 ### Stage 2: Feature Engineering (Weeks 2–3)
-- [ ] Implement feature extraction pipeline
+- [ ] Implement feature extraction pipeline with sampling-rate normalization
 - [ ] Compute all candidate features for all samples
+- [ ] Analyze feature stability across different sampling rates
 - [ ] Perform feature selection analysis
 - [ ] Document final 8–12 features and their biological justification
 
 ### Stage 3: Model Training & Ranking (Weeks 3–4)
-- [ ] Prepare labeled dataset (tissue type + features)
+- [ ] Prepare labeled dataset (tissue type + features + sampling rate metadata)
 - [ ] Train XGBoost / Random Forest classifier
 - [ ] Convert predictions to continuous fidelity scores
 - [ ] Rank phantoms by mimicry quality
 - [ ] Generate feature importance plot
 - [ ] Cross-validation and performance analysis
+- [ ] Sensitivity analysis: model robustness to sampling rate variation
 
 ### Stage 4: Optimization (Weeks 4–5)
 - [ ] Confirm formulation ratios for all phantoms
@@ -391,11 +433,12 @@ Train machine learning models to determine which artificial phantoms most closel
 - [ ] Plan validation experiments
 
 ### Stage 5: Documentation & Validation (Weeks 5–6)
-- [ ] Write final methodology document
+- [ ] Write final methodology document with sampling-rate discussion
 - [ ] Prepare results tables and figures
 - [ ] Code all scripts with documentation
 - [ ] Conduct hold-out test validation
 - [ ] Recommendations for next formulation candidates
+- [ ] Update Metadata.md with any additional collected data
 
 ---
 
@@ -404,12 +447,13 @@ Train machine learning models to determine which artificial phantoms most closel
 | Decision | Options | Recommendation |
 |----------|---------|-----------------|
 | Scoring approach | Binary / Multi-class / Continuous ranking | Continuous ranking (Option C) |
-| Condition handling | Average across / Match conditions / Hierarchical | Start with averaging; validate with matched |
+| Condition handling | Average across / Match conditions / Hierarchical | Hierarchical with Adipose_3/5 multi-condition data |
+| Sampling rate strategy | Resample all / Separate models / Rate-aware features | Resample to common rate (50 Hz) with validation |
 | Feature strategy | Manual extraction / Deep learning | Manual extraction (XGBoost/RF compatible) |
 | Model type | XGBoost / RF / SVM / Deep learning | XGBoost or Random Forest |
 | Optimization model | GPR / Polynomial / Bayesian optimization | GPR (uncertainty quantification) |
-| Validation method | Hold-out / k-fold / Leave-one-out | k-fold (5–10 folds) with hold-out test |
-| Data preprocessing | Resampling strategy | Understand file format first |
+| Validation method | Hold-out / k-fold / Leave-one-out | k-fold (5–10 folds) with hold-out test, stratified by rate |
+| Data preprocessing | Resampling strategy | Resample 100 Hz and 10 Hz to common 50 Hz rate |
 
 ---
 
@@ -419,6 +463,7 @@ Train machine learning models to determine which artificial phantoms most closel
 - Ranked list of phantoms by fidelity score
 - Feature importance analysis (which characteristics distinguish real from phantom?)
 - Classification model accuracy and uncertainty bounds
+- Sampling-rate impact analysis
 - Interpretation: "Phantom_2 is 87% as realistic as human tissue; mainly differs in energy dissipation"
 
 ### Phase 5 Deliverables
@@ -434,31 +479,40 @@ Train machine learning models to determine which artificial phantoms most closel
 1. **Update `/Code/` directory:**
    - Add Python scripts for each pipeline stage (exploration, feature extraction, modeling, optimization)
    - Include README with execution order and dependencies
+   - Add data parsing utilities for `.sum` files
 
 2. **Expand `/Documentation/`:**
-   - Add detailed feature engineering document
+   - Add detailed feature engineering document with sampling-rate considerations
    - Add model training methodology
    - Add results interpretation guide
+   - Keep Action_Plan.md synchronized with progress
 
 3. **Create `/Results and analysis/` content:**
    - Populate with fidelity rankings
-   - Add visualizations (signal comparisons, feature importance plots, fidelity curves)
+   - Add visualizations (signal comparisons by sampling rate, feature importance plots, fidelity curves)
 
 4. **Add `/Data_Processing/` (if needed):**
-   - Scripts for `.sum` file parsing
+   - Scripts for `.sum` file parsing with sampling rate detection
    - Data validation and cleaning utilities
-   - Preprocessing pipeline
+   - Preprocessing pipeline with resampling
+
+5. **Maintain Metadata.md:**
+   - Continue cataloging new tissue files
+   - Document sampling rates and test conditions for each recording
+   - Track data quality notes
 
 ---
 
 ## Questions to Resolve Immediately
 
-1. **Are `.sum` files in the repo?** If not, where are they stored?
-2. **What's the exact file format?** (binary structure, byte order, sample format)
+1. **Are all `.sum` files referenced in Metadata.md in the repo?** If not, where are they stored?
+2. **What's the exact file format?** (binary structure, byte order, sample format, metadata headers)
 3. **Do we have formulation ratios** for Phantom_1, Phantom_2, Phantom_3?
-4. **How many total recordings** do we have per tissue sample?
+4. **How many total recordings** do we have per tissue sample? (Verify against Metadata.md)
 5. **Are there any baseline/control recordings** (e.g., needle without liposuction)?
-6. **Data quality:** Are all files complete, or are some truncated/corrupted?
+6. **Data quality:** Are all files complete, or are some truncated/corrupted? (Especially Adipose_4 duplicates)
+7. **Sampling rate verification:** Confirm exact sampling frequencies for all files listed in Metadata.md
+8. **File organization:** Are data files in `/Clean _Data/` directory accessible? Structure and naming scheme?
 
 ---
 
@@ -467,6 +521,7 @@ Train machine learning models to determine which artificial phantoms most closel
 **Python Libraries:**
 - Data handling: pandas, numpy
 - Feature extraction: scipy (signal processing), scikit-learn
+- Resampling: scipy.signal.resample, scipy.interpolate
 - Modeling: scikit-learn (XGBoost, RandomForest), xgboost, lightgbm
 - Optimization: scikit-learn (GaussianProcessRegressor)
 - Visualization: matplotlib, seaborn, plotly
@@ -475,11 +530,14 @@ Train machine learning models to determine which artificial phantoms most closel
 - Wavelet decomposition: pywt (PyWavelets)
 - Approximate entropy: sampropy
 - Deep learning: PyTorch, TensorFlow (if data grows)
+- Sampling rate handling: librosa (audio/signal resampling utilities)
 
 ---
 
 ## Notes
 
 - This plan assumes feature-based ML approach (vs. end-to-end deep learning). If dataset grows significantly (100+ samples), revisit deep learning.
+- **Mixed sampling rates (10 Hz vs. 100 Hz) are a key preprocessing challenge.** Resampling to common rate (50 Hz) recommended to preserve information while enabling fair comparison.
 - Phantom ranking is sensitive to feature choice and distance metric. Multiple validation approaches recommended.
 - Optimization phase (Phase 5) assumes smooth relationship between formulation and fidelity. Non-linear or multi-modal surfaces may require adaptive sampling.
+- **Adipose_3 and Adipose_5 provide comprehensive condition coverage** — prioritize these for ground truth definition and condition-matched comparisons.
