@@ -1,46 +1,137 @@
-# High-Level Project Description
-## Development of a Test Setup for Data-Based Evaluation of Artificial Fat Tissue
+Project Description
+Master's thesis: Development of a test setup for data-based evaluation of artificial fat tissue Author: Manish Joshi, Chair of Microfluidics, University of Rostock
 
-### Project context and motivation
+1. Project description
 
-Water-jet-assisted liposuction (WAL) uses a pulsed water jet to assist the separation of subcutaneous adipose tissue while a cannula removes the mobilized tissue by suction. Development and validation of WAL devices, and realistic training concepts for their use, require test materials that reproduce the mechanical interaction between the cannula and human adipose tissue. Direct experiments on human tissue are limited by availability, ethical requirements, biological variability, and difficulties in obtaining sufficiently standardized specimens. Artificial tissue phantoms are therefore a practical alternative, but their value depends on whether their mechanical response under liposuction-relevant loading can be shown quantitatively to resemble that of real adipose tissue.
+Liposuction depends heavily on the surgeon's tactile experience. Yet no training models exist whose mechanical behaviour has been shown to match human fat. Artificial tissue phantoms made from hydrogels could fill this gap. However, their fidelity is usually judged by appearance or by standard material tests, and neither reproduces the loading during water-assisted liposuction (WAL). In WAL a cannula reciprocates through the tissue while a pulsed water jet and suction act at its tip.
 
-Conventional material tests can characterize isolated properties, but they do not necessarily reproduce the combined insertion, reciprocating motion, suction, and water-jet loading present during WAL. A more application-specific approach is therefore to use the liposuction system itself as the measurement platform and evaluate the force response generated during interaction with real and artificial tissue. Previous work at the Chair of Microfluidics established the feasibility of this concept using a Human Med AG *body-jet* system fitted with a Burster 8438-5100 strain-gauge ring force sensor directly behind the cannula. The sensor preserves a central flow path for suction and records axial compressive and tensile force as a force-time signal in Newtons, with measurements acquired at up to approximately 100 Hz.
+This thesis develops and evaluates a data-based method for comparing phantoms with human adipose tissue under the procedure itself. The method uses the axial force measured by a ring load cell (burster 8438, ±100 N, strain-gauge full bridge) in the handpiece of a commercial WAL system (body-jet). The force is recorded with DigiVision at 100 Hz. The project has five parts: test bench, phantoms, measurements, data analysis, and outputs.
 
-The predecessor experiments also exposed the main limitation addressed by the present project: the measured signal depends not only on tissue mechanics but also on how the cannula and specimen are handled. Earlier tests relied on manual specimen fixation and an operator-controlled reciprocating motion whose velocity was maintained by subjective feel. Baseline shift of recorded force signal from sensor-adapter preload, variable test duration, and different machine settings further complicated comparison. Under such conditions, a data-analysis model can learn operator or device-condition effects instead of material behavior. The present work therefore combines improved experimental standardization with a statistically controlled method for quantifying phantom fidelity.
+1.1 Test bench
 
-### Aim and experimental strategy
+A modular bench consists of:
 
-The overall aim is to develop and validate a standardized, sensor-based methodology for evaluating artificial fat-tissue phantoms under WAL-relevant conditions. The project integrates mechanical test-system development, phantom fabrication, controlled experiments, signal processing, statistical analysis, and machine learning. The desired output is not merely a classifier that labels a recording as “human” or “phantom,” but a reproducible framework that determines which artificial formulation behaves most similarly to real adipose tissue, identifies the signal characteristics responsible for remaining differences, and reports the uncertainty of that conclusion.
+an aluminium-profile frame;
+a linear rail and carriage that guide the handpiece along one axis;
+end stops that fix the stroke length at 80 mm;
+a perforated tray with a screw-driven clamping disc that holds the specimen in a defined position.
 
-The work has three connected objectives. First, a modular one-degree-of-freedom test bench will be designed and manufactured to reduce variability in cannula trajectory and specimen positioning and to improve repeatability, while retaining manual actuation of the cannula. Second, sensor signals from human adipose tissue and artificial phantoms will be processed into physically interpretable mechanical descriptors and compared using quantitative similarity measures. Third, the relationship between phantom formulation and measured mechanical response will be evaluated across the available and newly produced formulations. Together, these objectives implement the thesis task of standardized liposuction-data collection, production and testing of artificial tissue phantoms, processing of sensor data, comparison of mechanical tissue behavior, and derivation of a data-based method for differentiating and evaluating tissue types.
+The aim is that the recorded force reflects the specimen more than the operator's handling. Stroke rate is paced by an acoustic cue at 1.9 Hz. Velocity is not mechanically fixed, so it remains a stated limitation.
 
-### Standardized test setup
+1.2 Phantoms
 
-The test bench will constrain the cannula to a single translational degree of freedom while the insertion and retraction motion remains manually actuated. The direction of motion and specimen position are mechanically defined. Penetration depth is controlled by restricting the travel of the linear carriage to a predefined length, whereas cannula velocity is not mechanically controlled and remains operator-dependent because the translational motion is performed manually. Specimen fixation will be incorporated to prevent motion of the tissue block from becoming an uncontrolled part of the measured force. Where practical, the design will adopt relevant mechanical principles of DIN EN ISO 7864:2016 Annex D, particularly defined insertion direction and stable substrate fixation. The standard is not directly applicable to the 3.8 mm WAL cannula because its nominal scope concerns much smaller injection needles, so it will be used as methodological guidance rather than as a claim of formal compliance. Constant insertion velocity is therefore treated as a reference principle rather than as a controlled parameter of the present manually actuated setup.
+Five gelatin-based formulations are designed so that each pairwise comparison isolates one compositional factor:
 
-The existing sensorized *body-jet* system will serve as the measurement basis. Previous experiments used three characteristic operating states: cannula motion without water or vacuum, vacuum operation without water, and combined water-jet plus vacuum operation. These machine settings will be retained as explicit experimental factors. Calibration, adapter preload, sealing, and resting-force baseline will be checked systematically because previous work showed that baseline shifts in force signal can substantially distort absolute force statistics. ==The benefit of the standardized bench will be evaluated primarily through repeatability and using measures such as standard deviation, coefficient of variation, median absolute deviation, and, where the repeated-measurement structure permits, intraclass correlation. Machine-learning separation of freehand and bench-controlled signals can provide supporting evidence, but improved repeatability is the more direct test of standardization.==
+ID	Composition	Isolates
+P1	6 % gelatin	baseline matrix
+P2	8 % gelatin	gelatin concentration (vs P1)
+P3	8 % gelatin + agar–gelatin lobules	lobules without network (vs P2)
+P4	6 % gelatin + 1 % chitosan	chitosan second network (vs P1)
+P5	P4 + lobules + microhollow spheres	inclusions with network (vs P4)
 
-### Phantom materials and measurement program
+All formulations share 30 % ethanol and 2 % glycerol. Cast date, age at test, mount and mass change are recorded per block. In total, 11 blocks were tested; P2 and P3 have two blocks each in state C, so the variation between blocks can be estimated.
 
-The three existing artificial formulations are hydrogel-based surrogates derived from earlier literature and preliminary experiments: a 12% (m/m) water-gelatin matrix containing approximately 400 hemispherical 2% (m/m) water-agar inclusions with about 200 mL total inclusion volume; a homogeneous 2% (m/m) water-agar phantom; and a homogeneous 4% (m/m) water-agar phantom. These are the documented formulations of the current dataset. Chitosan and glycerol are not components of ==these three phantoms and should not be presented as established materials in the current study==.
+1.3 Measurements
 
-The project is expected to add five standardized phantom formulation datasets, resulting in a final dataset comprising eight distinct phantom formulations. Composition and manufacturing parameters will be documented explicitly so that changes in polymer type, concentration, and internal structure can be related to changes in measured force behavior. Human adipose-tissue measurements form the biological reference. Because repeated recordings from one physical phantom or one human subject are not independent experiments, the statistical analysis will preserve the hierarchy of subject/specimen, recording, and time window rather than treating every file or signal segment as an independent sample.
+Phantom sessions:
 
-### Data processing and fidelity evaluation
+28 Sep 2026, state A (water jet and vacuum off): one block per formulation, 4 freehand and 4 guided runs per block at fresh insertion sites, 39 runs in total.
+29 Sep 2026, state C (water jet Range 3 + vacuum on): guided runs on six blocks. The clamped blocks were interleaved in rounds, so material is not tied to a time slot.
 
-After quality-control decisions, the current dataset contains 26 effective recordings: 15 phantom recordings from three physical phantom specimens/formulations and 11 human recordings from five human subjects. The effective independent sample size is therefore only three phantom units and five human units. This constraint determines the analysis strategy and rules out methods that would give a false impression of statistical power simply because each time series contains thousands of samples.
+Each run lasts about 80 s: 10 s still, 60 s of strokes, 10 s still.
 
-Each recording will undergo a file-level audit of duration, sampling frequency, timestamp continuity, force range, metadata consistency, and baseline behavior. A per-recording resting baseline will be subtracted while the raw signal is retained for traceability. Sampling rates are mixed between approximately 10 Hz and 100 Hz. For the primary all-data comparison, 100 Hz recordings will be anti-alias filtered and decimated to 10 Hz. The 10 Hz recordings will not be upsampled, because interpolation cannot restore frequency content that was never measured above their 5 Hz Nyquist limit. A secondary native-100 Hz analysis will be retained as a higher-resolution robustness check.
+Sensor-chain checks bracket every session:
 
-Signals will be divided into fixed-duration windows of approximately 5-10 s, with controlled overlap, to handle differences in recording duration without equating arbitrary numbers of samples. A compact set of approximately 10-15 interpretable features will be extracted, including force magnitude and variability, peak force, loading rate, signal energy, distribution shape, Welch power-spectral-density descriptors such as spectral centroid and entropy, and selected nonlinear complexity measures if their repeatability is acceptable. Feature selection will prioritize physical interpretation, stability, and low redundancy.
+zero-drift recordings;
+axial pulls to confirm the sign convention;
+strokes in air, which measure the handpiece's own dynamics and the load added by jet and vacuum without a specimen.
 
-The primary measure of phantom fidelity will be distributional similarity between human and phantom feature or spectral distributions, using Maximum Mean Discrepancy and/or Wasserstein distance. This directly addresses the scientific question of mechanical proximity and avoids treating a classifier probability as an arbitrary “realism score.” Condition matching is essential because the current database is strongly imbalanced: 10 of 11 effective human recordings were acquired with both water and vacuum active, while only 3 of 15 phantom recordings were acquired under the same combined condition. The primary human-phantom ranking will therefore use matched operating conditions, with the full dataset reported as a sensitivity analysis. If the matched and pooled rankings disagree, that difference will be interpreted as evidence of condition dependence rather than hidden as model noise.
+Human reference: ex-vivo human abdominal fat, freehand, recorded in five sessions (2024–2026):
 
-Random Forest and XGBoost models will be used as secondary tools to test whether tissue/formulation groups are distinguishable and to identify important features. Validation will be grouped by human subject or phantom specimen so that windows from the same physical unit never occur in both training and test data. A metadata-only classifier using machine settings, sampling-rate track, and operator/session information will be evaluated as a confound baseline. ==Balanced accuracy, macro-F1, class-wise performance, permutation testing, and bootstrap confidence intervals will be used instead of relying on a single accuracy value.== Deep neural networks and transformer models are not suitable as the evidentiary basis of this thesis because the number of independent specimens is too small for reliable end-to-end training.
+Session	Donors	Rate	Notes
+S1 (2024)	2	100 Hz	earlier 3D-printed adapter; operator and donor coincide
+S2 (Dec 2025)	1	10 Hz	five operators
+S3 (Mar 2026)	1	10 Hz	the author, states A/B/C, with the bench handpiece
+S4 (Mar 2026)	1	10 Hz	
+S5 (Apr 2026)	1	10 Hz	device state not recorded
+1.4 Data analysis
 
-### Expected outcome and scope
+The analysis turns each raw (time, force) recording into a small set of interpretable numbers. It answers each research question at the level of independent units: phantom blocks and human donors, never windows or repeated recordings.
 
-The project will deliver a standardized mechanical test setup, a documented WAL measurement protocol, a quality-controlled signal-processing pipeline, interpretable mechanical and spectral features, and a quantitative ranking of phantom-to-human similarity with uncertainty. It will also assess how changes in phantom composition influence the measured response and whether standardized operation improves measurement reliability.
+(a) Data structure and audit.
 
-Existing recordings are sufficient to develop and verify the preprocessing, feature-extraction, confound-control, and provisional similarity-ranking pipeline. Definitive conclusions regarding the best formulation, the reliability improvement achieved by the new bench, and the formulation-to-mechanical-response relationship require the five additional standardized phantom datasets. With eight formulations and one physical specimen per formulation in the present design, composition-response trends can be investigated, but a fully predictive formulation-optimization model would be premature without substantially more independent formulations and replicate specimens. The scientific contribution of the thesis is therefore the establishment of a credible, application-specific measurement and evaluation methodology for artificial adipose tissue, rather than an overconfident optimization claim from an undersized dataset.
+Hierarchy. Every file is placed in the hierarchy:
+for phantoms: formulation → cast → block → insertion (recording) → 10-s window;
+for human tissue: donor → operator → device state → recording → window.
+Confound audit. Before any analysis, classifiers that see only acquisition metadata (start time, mount, round, day, block age, sampling rate) are run to measure how much of the material label is predictable without force data. Variables that coincide with the material are reported as confounds next to every result.
+
+(b) Signal processing.
+
+Admission. Recordings are split at timing gaps and only regularly sampled stretches are kept; nothing is interpolated.
+Phase detection.
+Bench runs: the stroke phase is the longest active stretch of a rolling-SD activity detector.
+Human recordings: an activity mask removes pauses and repositioning.
+Baseline. Each run is referenced to its own contact-free baseline, which removes tare offsets and sensor-reseating steps.
+Artefact masks. Artefacts documented on the run sheets are masked before windowing; impact transients are flagged.
+Two analysis tracks.
+The native 100 Hz track is used for phantom–S1 comparisons.
+An anti-aliased 10 Hz track (zero-phase FIR low-pass filter, then decimation) is used for comparisons that include the 10 Hz human sessions.
+A dedicated test measures how much each descriptor is distorted by the 10 Hz reduction, in units of the scatter between insertions. Only descriptors that survive it are used on the 10 Hz track.
+Descriptors. Nine offset-invariant descriptors in four families are computed on non-overlapping 10-s windows (5 s and 20 s as variants):
+spread: standard deviation (the force-fluctuation amplitude, the primary descriptor), interquartile range, 5th–95th percentile range;
+shape: skewness, excess kurtosis;
+rate: 95th percentiles of loading and unloading rate;
+spectrum: spectral centroid and normalised spectral entropy in 0.1–5 Hz (Welch estimate).
+The stroke cadence and the mean force above baseline are reported separately. Each recording is summarised by the median of its windows.
+
+(c) RQ1: repeatability and the effect of the bench.
+
+Primary endpoint. The scatter between repeat insertions of log(window SD) within each block is compared between freehand and guided runs with an F-test, reported as an SD ratio with a 95 % CI and the minimum detectable ratio.
+Supporting analyses:
+guided/freehand response ratios for every descriptor (block fixed effects, robust HC3 errors);
+ICC(1) for the share of variance between specimens;
+the repeatability coefficient in newtons.
+
+(d) RQ2: effect of composition.
+
+State A. Four planned single-factor contrasts (P2–P1, P3–P2, P4–P1, P5–P4) on the window SD, as ratios with 95 % CIs and Holm correction. They are labelled specimen-level because each formulation has one block. A within-block time-trend bound checks whether drift over the session could explain a contrast.
+State C. The two pairs of twin blocks (La/Lb, 8a/8b) give the variation between blocks of one formulation. This is the benchmark a recipe effect must exceed. A formulation-level contrast (P3 vs P2, two blocks each) is then estimated.
+Effect budget. Composition, execution, operator, device-state and stroke-speed effects are placed on one multiplicative axis.
+
+(e) RQ3: distinguishing materials.
+
+Models. Fixed, untuned models: majority baseline, L2 logistic regression and a shallow random forest. Scaling is fitted on training data only.
+Validation. All windows of a held-out unit stay together:
+the primary test trains on one block per formulation and predicts unseen blocks (P2 vs P3);
+leave-one-recording-out is used for single-block formulations.
+Controls:
+negative controls: two blocks of the same material must not be separated better than different materials;
+metadata-only baselines under the same folds;
+a window-random split, reported only to show how much pseudoreplication inflates accuracy.
+Metrics. Held-out blocks correct, recording-level accuracy with Wilson 95 % CIs, and per-class results.
+
+(f) RQ4: similarity to human tissue.
+
+Two-tier human reference:
+tier 1: all nine descriptors at 100 Hz against the two S1 donors (matched device state and execution);
+tier 2: spread descriptors on the 10 Hz track against all donors in the same device state, including the author's own operator-matched recording.
+Distance. Descriptors are standardised by the human data only. The primary distance D is a family-weighted Euclidean distance from each phantom recording to the human centre. Wasserstein-1 and kernel MMD² serve as alternative metrics.
+Human scale. D is expressed as a relative index, RI = D / (distance between human donors). RI ≤ 1 means a phantom lies within the variation between human donors.
+Uncertainty. A bootstrap with 2000 resamples (recordings within blocks and within donors) gives each formulation's probability of ranking first and confidence intervals for its distance gap to the best formulation.
+Robustness.
+The ranking is recomputed across metrics, window lengths, descriptor families and human references (135 scenarios). Agreement is summarised with Kendall's W.
+Leave-one-donor-out and single-donor rankings check whether one donor drives the result.
+Claim rule. A pre-committed rule decides whether a single closest formulation can be named, or only a group that cannot be separated. Equivalence is never claimed.
+
+(g) Software and reproducibility. The pipeline is written in Python (NumPy, pandas, Matplotlib), with statistics and classifiers implemented and checked against textbook values. One script reproduces every table and figure from the raw DigiVision exports, with fixed seeds and a logged manifest. Every departure from the pre-specified analysis plan is recorded as a deviation.
+
+1.5 Outputs
+
+The measured force is treated as the response of the tool–specimen–procedure system, not as a material property. The outcomes are:
+
+a reusable acquisition and analysis methodology;
+a ranking of the tested formulations stated with its uncertainty and robustness;
+an assessment of how reliably materials can be distinguished once confounding is controlled;
+evidence-based recommendations for phantom development and future data collection.
+
+It is not a claim that any phantom is equivalent to human tissue.
