@@ -1,4 +1,4 @@
-Project Description
+# Project Description
 Master's thesis: Development of a test setup for data-based evaluation of artificial fat tissue Author: Manish Joshi, Chair of Microfluidics, University of Rostock
 
 1. Project description
